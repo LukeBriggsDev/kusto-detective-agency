@@ -1,0 +1,15 @@
+Shelves
+| project shelf, total_weight
+| join (Shelves
+    | project shelf, rf_ids
+    | mv-expand rf_ids to typeof(string)
+    | join (Books) on $left.rf_ids == $right.rf_id
+    | summarize actual_weight = sum(weight_gram) by shelf
+    ) on shelf
+| project shelf, total_weight, actual_weight
+| where total_weight-actual_weight > toscalar(
+    Books
+    | where book_title == "De Revolutionibus Magnis Data"
+    | limit 1
+    | summarize max(weight_gram)
+);
